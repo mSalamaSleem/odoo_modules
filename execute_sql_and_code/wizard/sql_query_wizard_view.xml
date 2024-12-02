@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sql_query_wizard" model="ir.ui.view">
+        <field name="name">sql.query.wizard.form</field>
+        <field name="model">sql.query.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Execute SQL Query">
+                <group>
+                    <field colspan="2" name="sql_or_code" nolabel="1" widget="selection_badge" options="{'horizontal': true, 'size': 'sm'}"/>
+                </group>
+                <group invisible="sql_or_code != 'sql'">
+                    <field colspan="2" name="query" nolabel="1" placeholder="Enter your SQL query here...
+ex:
+SELECT id,name FROM crm_lead
+INSERT INTO crm_lead (name) VALUES ('test_insert')
+UPDATE crm_lead SET name = 'test update' WHERE name = 'test_insert'
+DELETE FROM crm_lead WHERE name = 'test_insert'                     "/>
+                </group>
+                <group invisible="sql_or_code != 'code'">
+                    <field colspan="2" name="code" nolabel="1" options="{'mode': 'python'}" placeholder="Enter code" widget="ace"/>
+                </group>
+                <group invisible="sql_or_code != 'file'">
+                    <field name="filename" invisible="True"/>
+                    <field name="file" filename="filename"/>
+                </group>
+                <group invisible="sql_or_code != 'shell'">
+                    <field colspan="2" name="shell_command" nolabel="1" options="{'mode': 'python'}" widget="ace" placeholder="Enter shell command here..."/>
+                </group>
+                <br/>
+                <group>
+                    <field colspan="2" name="example1" nolabel="1" readonly="1" widget="CopyClipboardChar"/>
+                    <field colspan="2" name="example2" nolabel="1" readonly="1" widget="CopyClipboardChar"/>
+                    <field colspan="2" name="example3" nolabel="1" readonly="1" widget="CopyClipboardChar"/>
+                        <field name="code_examples" widget="html"/>
+                </group>
+                <br/>
+                <group style="background-color: #f2dede; border: 1px solid #ebccd1; padding: 10px; margin-top: 10px;">
+                    <field colspan="2" invisible="sql_or_code not in ['code', 'file']" name="code_result" nolabel="1" readonly="1"/>
+                    <field colspan="2" invisible="sql_or_code != 'shell'" name="shell_result" nolabel="1" readonly="1"/>
+                    <field colspan="2" invisible="sql_or_code != 'sql'" name="sql_result" nolabel="1" readonly="1"/>
+                </group>
+                <footer>
+                    <button class="btn-primary" name="execute" string="Execute" type="object"/>
+                    <button class="btn-secondary" special="cancel" string="Cancel"/>
+                </footer>
+            </form></field>
+    </record>
+    <record id="action_sql_query_wizard" model="ir.actions.act_window">
+        <field name="name">Execute SQL Query</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sql.query.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_sql_query_wizard"/>
+        <field name="target">new</field>
+    </record>
+    <menuitem
+        id="menu_sql_query_root"
+        name="Execute Code"
+        web_icon="sql_query,static/description/icon.png"
+        sequence="100"
+    />
+    <menuitem action="action_sql_query_wizard" groups="base.group_no_one" id="menu_sql_query_wizard" name="Execute SQL Query" parent="menu_sql_query_root" sequence="-10"/>
+</odoo>
