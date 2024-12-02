@@ -14,6 +14,8 @@
         'security/ir.model.access.csv',
         'wizard/sql_query_wizard_view.xml',
     ],
+    'images': ['static/description/assets/images.gif'],
+    'license': 'LGPL-3',
     'application': True,
     'sequence': -100
 }
