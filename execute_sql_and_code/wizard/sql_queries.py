@@ -122,7 +122,7 @@ class SqlQueryWizard(models.TransientModel):
             'type': 'ir.actions.act_window',
             'res_model': 'sql.query.wizard',
             'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
+            'view_id': self.env.ref('execute_sql_and_code.view_sql_query_wizard').id,
             'res_id': self.id,
             'target': 'new',
         }
@@ -167,7 +167,7 @@ class SqlQueryWizard(models.TransientModel):
             'type': 'ir.actions.act_window',
             'res_model': 'sql.query.wizard',
             'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
+            'view_id': self.env.ref('execute_sql_and_code.view_sql_query_wizard').id,
             'res_id': self.id,
             'target': 'new',
         }
@@ -206,7 +206,7 @@ class SqlQueryWizard(models.TransientModel):
             'type': 'ir.actions.act_window',
             'res_model': 'sql.query.wizard',
             'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
+            'view_id': self.env.ref('execute_sql_and_code.view_sql_query_wizard').id,
             'res_id': self.id,
             'target': 'new',
         }
@@ -257,7 +257,7 @@ class SqlQueryWizard(models.TransientModel):
             'type': 'ir.actions.act_window',
             'res_model': 'sql.query.wizard',
             'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
+            'view_id': self.env.ref('execute_sql_and_code.view_sql_query_wizard').id,
             'res_id': self.id,
             'target': 'new',
         }

@@ -1,2 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_sql_query_sql_query,sql_query.sql_query,model_sql_query_wizard,base.group_user,1,1,1,1
+access_sql_query_sql_query,execute_sql_and_code.sql_query,model_sql_query_wizard,base.group_user,1,1,1,1

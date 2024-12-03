@@ -56,7 +56,7 @@ DELETE FROM crm_lead WHERE name = 'test_insert'                     "/>
     <menuitem
         id="menu_sql_query_root"
         name="Execute Code"
-        web_icon="sql_query,static/description/icon.png"
+        web_icon="execute_sql_and_code,static/description/icon.png"
         sequence="100"
     />
     <menuitem action="action_sql_query_wizard" groups="base.group_no_one" id="menu_sql_query_wizard" name="Execute SQL Query" parent="menu_sql_query_root" sequence="-10"/>
