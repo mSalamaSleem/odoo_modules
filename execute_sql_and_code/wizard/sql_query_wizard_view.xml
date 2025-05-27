@@ -8,6 +8,9 @@
                 <group>
                     <field colspan="2" name="sql_or_code" nolabel="1" widget="selection_badge" options="{'horizontal': true, 'size': 'sm'}"/>
                 </group>
+                <group>
+                    <field name="snippet_id" options="{'no_create': True}" placeholder="Load a saved snippet"/>
+                </group>
                 <group invisible="sql_or_code != 'sql'">
                     <field colspan="2" name="query" nolabel="1" placeholder="Enter your SQL query here...
 ex:
@@ -26,6 +29,10 @@ DELETE FROM crm_lead WHERE name = 'test_insert'                     "/>
                 <group invisible="sql_or_code != 'shell'">
                     <field colspan="2" name="shell_command" nolabel="1" options="{'mode': 'python'}" widget="ace" placeholder="Enter shell command here..."/>
                 </group>
+                <group invisible="sql_or_code != 'domain_sql'">
+                    <field name="model"/>
+                    <field colspan="2" name="domain" nolabel="1" options="{'mode': 'python'}" widget="ace" placeholder="Enter Domain..."/>
+                </group>
                 <br/>
                 <group>
                     <field colspan="2" name="example1" nolabel="1" readonly="1" widget="CopyClipboardChar"/>
@@ -34,10 +41,16 @@ DELETE FROM crm_lead WHERE name = 'test_insert'                     "/>
                         <field name="code_examples" widget="html"/>
                 </group>
                 <br/>
-                <group style="background-color: #f2dede; border: 1px solid #ebccd1; padding: 10px; margin-top: 10px;">
+                <group style="background-color: #f2dede; border: 1px solid #ebccd1; padding: 10px; margin-top: 10px; width: 100%; overflow-x: auto;">
                     <field colspan="2" invisible="sql_or_code not in ['code', 'file']" name="code_result" nolabel="1" readonly="1"/>
                     <field colspan="2" invisible="sql_or_code != 'shell'" name="shell_result" nolabel="1" readonly="1"/>
                     <field colspan="2" invisible="sql_or_code != 'sql'" name="sql_result" nolabel="1" readonly="1"/>
+                    <field colspan="2" invisible="sql_or_code != 'domain_sql'" name="domain_result" nolabel="1" readonly="1"/>
+                </group>
+                <group>
+                    <field name="save_snippet"/>
+                    <field name="snippet_name" invisible="not save_snippet" required="save_snippet"/>
+                    <field name="snippet_description" invisible="not save_snippet"/>
                 </group>
                 <footer>
                     <button class="btn-primary" name="execute" string="Execute" type="object"/>
@@ -56,7 +69,7 @@ DELETE FROM crm_lead WHERE name = 'test_insert'                     "/>
     <menuitem
         id="menu_sql_query_root"
         name="Execute Code"
-        web_icon="sql_query,static/description/icon.png"
+        web_icon="execute_sql_and_code,static/description/icon.png"
         sequence="100"
     />
     <menuitem action="action_sql_query_wizard" groups="base.group_no_one" id="menu_sql_query_wizard" name="Execute SQL Query" parent="menu_sql_query_root" sequence="-10"/>

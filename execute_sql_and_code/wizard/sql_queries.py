@@ -17,11 +17,15 @@ class SqlQueryWizard(models.TransientModel):
     sql_result = fields.Html(string='Result', readonly=True)
     shell_command = fields.Text(string='Shell Command')
     shell_result = fields.Html(string='Shell Result', readonly=True)
+    domain = fields.Char(string='Domain')
+    model = fields.Many2one('ir.model', string='Model')
+    domain_result = fields.Html(string='Result', readonly=True)
     sql_or_code = fields.Selection([
         ('sql', 'SQL'),
         ('code', 'Code'),
         ('file', 'File'),
-        ('shell', 'Shell')
+        ('shell', 'Shell'),
+        ('domain_sql', 'Domain to Sql')
     ], default='code')
     filename = fields.Char(string='File Name')
     file = fields.Binary(string='File')
@@ -30,6 +34,14 @@ class SqlQueryWizard(models.TransientModel):
     example3 = fields.Char(string='Examples', default="Command")
 
     code_examples = fields.Html(compute='_compute_code_examples')
+
+    # Fields for saving snippets
+    save_snippet = fields.Boolean(string='Save as Snippet')
+    snippet_name = fields.Char(string='Snippet Name')
+    snippet_description = fields.Text(string='Description')
+
+    # Field for loading snippets
+    snippet_id = fields.Many2one('code.snippet', string='Load Snippet')
 
     @api.depends('sql_or_code')
     def _compute_code_examples(self):
@@ -45,11 +57,16 @@ class SqlQueryWizard(models.TransientModel):
             "shell": [
                 "new_partner = res_partner.create({'name': 'Test Partner'})<br/>print(new_partner)",
                 "for user in res_users.search([])[:5]:<br/>&emsp;print(user.name, user.email)"
+            ],
+            'domain_sql': [
+                "Crm Lead",
+                "[('type', '=', 'lead')]"
             ]
         }
         for record in self:
             lines = examples.get(record.sql_or_code, [])
             record.code_examples = f"<ol>{''.join([f'<li>{line}</li>' for line in lines])}</ol>"
+
     # @api.depends('sql_or_code', 'code')
     # def _compute_examples(self):
     #     my_list = '''
@@ -78,6 +95,8 @@ class SqlQueryWizard(models.TransientModel):
             return self.execute_file()
         if self.sql_or_code == 'shell':
             return self.execute_shell()
+        if self.sql_or_code == 'domain_sql':
+            return self.execute_domain_to_sql()
 
     def execute_sql(self):
         if not self.query:
@@ -118,14 +137,11 @@ class SqlQueryWizard(models.TransientModel):
         except Exception as e:
             raise UserError('Failed to execute the SQL query: {}'.format(e))
 
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'sql.query.wizard',
-            'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
-            'res_id': self.id,
-            'target': 'new',
-        }
+        # Save snippet if requested
+        if self.save_snippet and self.snippet_name:
+            self._save_as_snippet()
+
+        return self.action_wizard_form()
 
     def execute_code(self):
         self.ensure_one()
@@ -163,14 +179,11 @@ class SqlQueryWizard(models.TransientModel):
             error_trace = traceback.format_exc()
             raise UserError(f'Failed to execute the Python code: {e}\n\nDetailed Traceback:\n{error_trace}')
 
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'sql.query.wizard',
-            'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
-            'res_id': self.id,
-            'target': 'new',
-        }
+        # Save snippet if requested
+        if self.save_snippet and self.snippet_name:
+            self._save_as_snippet()
+
+        return self.action_wizard_form()
 
     def execute_file(self):
         self.ensure_one()
@@ -202,14 +215,12 @@ class SqlQueryWizard(models.TransientModel):
             import traceback
             error_trace = traceback.format_exc()
             raise UserError(f'Failed to execute the Python code: {e}\n\nDetailed Traceback:\n{error_trace}')
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': 'sql.query.wizard',
-            'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
-            'res_id': self.id,
-            'target': 'new',
-        }
+
+        # Save snippet if requested
+        if self.save_snippet and self.snippet_name:
+            self._save_as_snippet()
+
+        return self.action_wizard_form()
 
     def execute_shell(self):
         """
@@ -253,11 +264,95 @@ class SqlQueryWizard(models.TransientModel):
             error_trace = traceback.format_exc()
             self.shell_result = f'<pre>Shell execution failed: {final_error}\n{error_trace}</pre>'
 
+        # Save snippet if requested
+        if self.save_snippet and self.snippet_name:
+            self._save_as_snippet()
+
+        return self.action_wizard_form()
+
+    def execute_domain_to_sql(self):
+        if not self.domain or not self.model:
+            raise UserError('Please enter a domain and select a model.')
+
+        domain = self.get_domain()
+        try:
+            query = self.env[self.model.model]._where_calc(domain)
+            code = query.select().code
+            params = query.select().params
+            query_with_params = code.replace('%s', '%r') % tuple(params)
+
+            self.domain_result = f'<pre>{query_with_params};</pre>'
+
+        except Exception as e:
+            raise UserError('Failed to convert domain: {}'.format(e))
+
+        return self.action_wizard_form()
+
+    def get_domain(self):
+        domain = self.check_domain_syntax()
+        return eval(domain)
+
+    def check_domain_syntax(self):
+        domain = self.domain.strip()
+        if not domain.startswith('['):
+            domain = f"[{domain}"
+        if not domain.endswith(']'):
+            domain = f"{domain}]"
+        return domain
+
+    def action_wizard_form(self):
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'sql.query.wizard',
             'view_mode': 'form',
-            'view_id': self.env.ref('sql_query.view_sql_query_wizard').id,
+            'view_id': self.env.ref('execute_sql_and_code.view_sql_query_wizard').id,
             'res_id': self.id,
             'target': 'new',
         }
+
+    def _save_as_snippet(self):
+        """Save the current code as a snippet"""
+        if not self.snippet_name:
+            raise UserError('Please provide a name for the snippet.')
+
+        code_content = ''
+        snippet_type = self.sql_or_code
+
+        if snippet_type == 'sql':
+            code_content = self.query
+        elif snippet_type == 'code':
+            code_content = self.code
+        elif snippet_type == 'shell':
+            code_content = self.shell_command
+        else:
+            return
+
+        if not code_content:
+            raise UserError('No code content to save.')
+
+        self.env['code.snippet'].create({
+            'name': self.snippet_name,
+            'description': self.snippet_description or '',
+            'snippet_type': snippet_type,
+            'code': code_content,
+        })
+
+        return {'type': 'ir.actions.client', 'tag': 'display_notification', 'params': {
+            'title': 'Success',
+            'message': f'Snippet "{self.snippet_name}" saved successfully',
+            'type': 'success',
+            'sticky': False,
+        }}
+
+    @api.onchange('snippet_id')
+    def _onchange_snippet_id(self):
+        """Load the selected snippet"""
+        if self.snippet_id:
+            self.sql_or_code = self.snippet_id.snippet_type
+
+            if self.snippet_id.snippet_type == 'sql':
+                self.query = self.snippet_id.code
+            elif self.snippet_id.snippet_type == 'code':
+                self.code = self.snippet_id.code
+            elif self.snippet_id.snippet_type == 'shell':
+                self.shell_command = self.snippet_id.code
