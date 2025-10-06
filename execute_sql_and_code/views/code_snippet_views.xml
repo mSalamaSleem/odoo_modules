@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_code_snippet_tree" model="ir.ui.view">
+        <field name="name">code.snippet.tree</field>
+        <field name="model">code.snippet</field>
+        <field name="arch" type="xml">
+            <tree string="Code Snippets">
+                <field name="name"/>
+                <field name="snippet_type"/>
+                <field name="description"/>
+                <field name="is_favorite" widget="boolean_favorite"/>
+                <field name="create_uid"/>
+                <field name="create_date"/>
+                <button name="action_execute_snippet" string="Execute" type="object" class="btn btn-primary btn-sm"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_code_snippet_form" model="ir.ui.view">
+        <field name="name">code.snippet.form</field>
+        <field name="model">code.snippet</field>
+        <field name="arch" type="xml">
+            <form string="Code Snippet">
+                <header>
+                    <button name="action_execute_snippet" string="Execute Snippet" type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_favorite" type="object" class="oe_stat_button" icon="fa-star">
+                            <field name="is_favorite" widget="boolean_favorite"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Snippet Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="snippet_type" widget="radio"/>
+                        </group>
+                        <group>
+                            <field name="create_uid"/>
+                            <field name="create_date"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Code">
+                            <field name="code" widget="ace" options="{'mode': 'python'}" placeholder="Enter your code here..."/>
+                        </page>
+                        <page string="Description">
+                            <field name="description" placeholder="Add a description for this snippet..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_code_snippet_search" model="ir.ui.view">
+        <field name="name">code.snippet.search</field>
+        <field name="model">code.snippet</field>
+        <field name="arch" type="xml">
+            <search string="Search Code Snippets">
+                <field name="name"/>
+                <field name="description"/>
+                <field name="code"/>
+                <filter string="Favorites" name="favorites" domain="[('is_favorite', '=', True)]"/>
+                <separator/>
+                <filter string="SQL" name="sql_type" domain="[('snippet_type', '=', 'sql')]"/>
+                <filter string="Python Code" name="code_type" domain="[('snippet_type', '=', 'code')]"/>
+                <filter string="Shell Command" name="shell_type" domain="[('snippet_type', '=', 'shell')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Type" name="group_by_type" context="{'group_by': 'snippet_type'}"/>
+                    <filter string="Created By" name="group_by_user" context="{'group_by': 'create_uid'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_code_snippet" model="ir.actions.act_window">
+        <field name="name">Code Snippets</field>
+        <field name="res_model">code.snippet</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_code_snippet_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first code snippet
+            </p>
+            <p>
+                Save frequently used SQL queries, Python code, or shell commands for quick access.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_code_snippet" 
+              name="Saved Snippets" 
+              action="action_code_snippet" 
+              parent="base.menu_administration"
+              sequence="10"/>
+</odoo>
